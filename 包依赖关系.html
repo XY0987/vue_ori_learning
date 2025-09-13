@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Vue3 Monorepo 依赖可视化&分析</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg: #0f172a;
+            /* slate-900 */
+            --panel: #111827;
+            /* gray-900 */
+            --card: #0b1220;
+            /* deep */
+            --card2: #122137;
+            /* deep2 */
+            --text: #e5e7eb;
+            /* gray-200 */
+            --muted: #9ca3af;
+            /* gray-400 */
+            --accent: #60a5fa;
+            /* blue-400 */
+            --accent2: #34d399;
+            /* emerald-400 */
+            --border: #1f2937;
+            /* gray-800 */
+            --warn: #f59e0b;
+            /* amber-500 */
+            --shadow: 0 6px 18px rgba(0, 0, 0, .35);
+            --radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, #0b1120, #0f172a 40%, #0b1120);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(255, 255, 255, .02), transparent);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: .5px
+        }
+
+        header .sub {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 6px
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 3fr 1.2fr;
+            gap: 16px;
+            padding: 16px;
+            align-items: start;
+        }
+
+        .panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .01));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .panel h2 {
+            margin: 0;
+            padding: 12px 14px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel h2 .badge {
+            background: rgba(96, 165, 250, .15);
+            color: #bfdbfe;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid rgba(96, 165, 250, .35)
+        }
+
+        .left {
+            min-height: 70vh;
+            padding: 12px;
+        }
+
+        .right {
+            min-height: 70vh;
+        }
+
+        .common-wrap {
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Flow view */
+        .flow {
+            margin: 12px 16px;
+        }
+
+        .flow .flow-wrap {
+            padding: 12px;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .flow-label {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 6px 0 2px 2px
+        }
+
+        .flow-step {
+            background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .01));
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 12px;
+            color: #e5e7eb;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, .03), inset 0 1px 0 rgba(255, 255, 255, .03);
+        }
+
+        .flow-step.pkg {
+            border-color: rgba(59, 130, 246, .35)
+        }
+
+        .flow-step .note {
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 3px;
+            max-width: 280px
+        }
+
+        .flow-arrow {
+            color: #94a3b8;
+        }
+
+        .flow-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .flow-chip {
+            font-size: 11px;
+            color: #93c5fd;
+            background: rgba(59, 130, 246, .12);
+            border: 1px solid rgba(59, 130, 246, .35);
+            padding: 2px 6px;
+            border-radius: 8px;
+            cursor: default;
+        }
+
+        /* Entry containers */
+        .entries {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .entry {
+            border: 1px dashed rgba(148, 163, 184, .28);
+            border-radius: 12px;
+            padding: 10px;
+            background: linear-gradient(180deg, rgba(59, 130, 246, .06), rgba(16, 185, 129, .04));
+        }
+
+        .entry-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .entry-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .chip {
+            font-size: 11px;
+            color: #cbd5e1;
+            background: rgba(148, 163, 184, .15);
+            border: 1px solid rgba(148, 163, 184, .35);
+            padding: 2px 6px;
+            border-radius: 999px;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        /* Package box */
+        .pkg {
+            position: relative;
+            border: 1px solid rgba(100, 116, 139, .35);
+            border-radius: 10px;
+            padding: 8px;
+            background: linear-gradient(180deg, var(--card), var(--card2));
+            transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, .03), inset 0 1px 0 rgba(255, 255, 255, .03);
+        }
+
+        .pkg:hover {
+            transform: translateY(-1px);
+            border-color: rgba(96, 165, 250, .6);
+            box-shadow: 0 8px 20px rgba(2, 132, 199, .25)
+        }
+
+        .pkg .name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+            word-break: break-all
+        }
+
+        .pkg .meta {
+            margin-top: 6px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap
+        }
+
+        .pkg .meta .mini {
+            font-size: 10px;
+            color: #cbd5e1;
+            background: rgba(148, 163, 184, .12);
+            border: 1px solid rgba(148, 163, 184, .3);
+            padding: 1px 6px;
+            border-radius: 999px;
+        }
+
+        .pkg .purpose {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Depth cues */
+        .pkg {
+            border-left: 2px solid transparent;
+        }
+
+        .pkg .name .arrow {
+            color: #93c5fd;
+            margin-right: 4px;
+            opacity: .9
+        }
+
+        .pkg.d1 {
+            border-left-color: #60a5fa
+        }
+
+        .pkg.d2 {
+            border-left-color: #34d399
+        }
+
+        .pkg.d3 {
+            border-left-color: #f59e0b
+        }
+
+        .pkg.d4 {
+            border-left-color: #a78bfa
+        }
+
+        .pkg.d5 {
+            border-left-color: #f472b6
+        }
+
+        .children {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+        }
+
+        .refs {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .ref {
+            font-size: 11px;
+            color: #93c5fd;
+            background: rgba(59, 130, 246, .12);
+            border: 1px solid rgba(59, 130, 246, .35);
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        /* Common list items */
+        .common-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            cursor: default;
+        }
+
+        .common-item:last-child {
+            border-bottom: none
+        }
+
+        .common-item .left-part {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #93c5fd, #2563eb);
+            box-shadow: 0 0 10px rgba(59, 130, 246, .6);
+        }
+
+        .count {
+            font-size: 11px;
+            color: #10b981;
+            background: rgba(16, 185, 129, .12);
+            border: 1px solid rgba(16, 185, 129, .35);
+            padding: 2px 6px;
+            border-radius: 999px;
+        }
+
+        /* Tooltip */
+        #tooltip {
+            position: fixed;
+            pointer-events: none;
+            z-index: 50;
+            background: rgba(10, 10, 20, .95);
+            color: #e5e7eb;
+            border: 1px solid rgba(148, 163, 184, .35);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 10px;
+            min-width: 240px;
+            max-width: 360px;
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity .12s ease, transform .12s ease;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        #tooltip .tt-name {
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #e2e8f0
+        }
+
+        #tooltip .row {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px
+        }
+
+        #tooltip .key {
+            width: 74px;
+            color: #94a3b8;
+            flex: 0 0 auto
+        }
+
+        #tooltip .val {
+            color: #e5e7eb;
+            word-break: break-all
+        }
+
+        footer {
+            color: var(--muted);
+            font-size: 12px;
+            padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        @media (max-width: 1100px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .right {
+                order: 2
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Vue3 Monorepo 依赖可视化</h1>
+        <div class="sub">嵌套方块展示入口包层级（公共包也在层级中显示；@vue/shared 为基础通用，不在树中展示）；右侧为公共包汇总（阈值：被依赖次数 ≥ 2）。悬停查看详细信息。</div>
+    </header>
+
+    <section class="panel flow">
+        <h2>编译 → 运行 流程 <span class="badge">CSR / SSR</span></h2>
+        <div class="flow-wrap">
+            <div class="flow-label">客户端渲染（CSR）</div>
+            <div class="flow-row" id="flow-csr"></div>
+            <div class="flow-label">服务端渲染（SSR + Hydration）</div>
+            <div class="flow-row" id="flow-ssr"></div>
+            <div class="flow-label">聚合与分发</div>
+            <div class="flow-row" id="flow-agg"></div>
+        </div>
+    </section>
+
+    <div class="layout">
+        <section class="panel left">
+            <h2>入口包与层级 <span id="entryCount" class="badge">0</span></h2>
+            <div class="entries" id="entries"></div>
+        </section>
+
+        <aside class="panel right">
+            <h2>公共共享包 <span id="commonCount" class="badge">0</span></h2>
+            <div class="common-wrap" id="commons"></div>
+        </aside>
+    </div>
+
+    <div id="tooltip" role="tooltip" aria-hidden="true"></div>
+
+    <footer>自动生成 · 包内“依赖”仅统计工作区 @vue/* 互相依赖关系</footer>
+
+    <script>
+        // 数据源：从 packages/**/package.json 解析整理（仅含带 name 的工作区包）
+        const PKGS = [
+            {
+                name: "@vue/shared",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/shared.esm-bundler.js",
+                types: "dist/shared.d.ts",
+                deps: []
+            },
+            {
+                name: "@vue/reactivity",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/reactivity.esm-bundler.js",
+                types: "dist/reactivity.d.ts",
+                deps: ["@vue/shared"]
+            },
+            {
+                name: "@vue/runtime-core",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/runtime-core.esm-bundler.js",
+                types: "dist/runtime-core.d.ts",
+                deps: ["@vue/shared", "@vue/reactivity"]
+            },
+            {
+                name: "@vue/runtime-dom",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/runtime-dom.esm-bundler.js",
+                types: "dist/runtime-dom.d.ts",
+                deps: ["@vue/shared", "@vue/runtime-core", "@vue/reactivity"]
+            },
+            {
+                name: "@vue/compiler-core",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/compiler-core.esm-bundler.js",
+                types: "dist/compiler-core.d.ts",
+                deps: ["@vue/shared"]
+            },
+            {
+                name: "@vue/compiler-dom",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/compiler-dom.esm-bundler.js",
+                types: "dist/compiler-dom.d.ts",
+                deps: ["@vue/shared", "@vue/compiler-core"]
+            },
+            {
+                name: "@vue/compiler-ssr",
+                version: "3.5.21",
+                main: "dist/compiler-ssr.cjs.js",
+                module: null,
+                types: "dist/compiler-ssr.d.ts",
+                deps: ["@vue/shared", "@vue/compiler-dom"]
+            },
+            {
+                name: "@vue/compiler-sfc",
+                version: "3.5.21",
+                main: "dist/compiler-sfc.cjs.js",
+                module: "dist/compiler-sfc.esm-browser.js",
+                types: "dist/compiler-sfc.d.ts",
+                deps: ["@vue/compiler-core", "@vue/compiler-dom", "@vue/compiler-ssr", "@vue/shared"]
+            },
+            {
+                name: "@vue/server-renderer",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/server-renderer.esm-bundler.js",
+                types: "dist/server-renderer.d.ts",
+                deps: ["@vue/shared", "@vue/compiler-ssr"]
+            },
+            {
+                name: "@vue/compat",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/vue.runtime.esm-bundler.js",
+                types: null,
+                deps: []
+            },
+            {
+                name: "@vue/runtime-test",
+                version: "0.0.0",
+                main: "index.js",
+                module: "dist/runtime-test.esm-bundler.js",
+                types: "dist/runtime-test.d.ts",
+                deps: ["@vue/shared", "@vue/runtime-core"]
+            },
+            {
+                name: "vue",
+                version: "3.5.21",
+                main: "index.js",
+                module: "dist/vue.runtime.esm-bundler.js",
+                types: "dist/vue.d.ts",
+                deps: ["@vue/shared", "@vue/compiler-dom", "@vue/runtime-dom", "@vue/compiler-sfc", "@vue/server-renderer"]
+            }
+        ];
+
+        // 各包用途说明（简要）
+        const PURPOSES = {
+            "@vue/shared": "内部共享工具方法（字符串/对象/数组/哈希等通用工具）",
+            "@vue/reactivity": "响应式系统（reactive/ref/effect/computed/依赖追踪）",
+            "@vue/runtime-core": "运行时核心（组件/VDOM/调度/生命周期/渲染器接口）",
+            "@vue/runtime-dom": "DOM 平台运行时实现（属性/事件/样式/DOM patch）",
+            "@vue/compiler-core": "模板编译核心（解析/AST/转换/代码生成）",
+            "@vue/compiler-dom": "面向 DOM 的编译转换（指令/属性特性平台化）",
+            "@vue/compiler-ssr": "SSR 编译器（将模板编译为服务端渲染函数）",
+            "@vue/compiler-sfc": "SFC 单文件组件编译与解析（.vue 解析/脚本/样式/模板）",
+            "@vue/server-renderer": "运行时 SSR 渲染器（将 vnode 渲染为 HTML 字符串/流）",
+            "@vue/runtime-test": "测试平台运行时（为单元测试提供虚拟渲染平台）",
+            "@vue/compat": "Vue2 兼容构建（帮助从 Vue2 迁移到 Vue3）",
+            "vue": "框架聚合入口（对外暴露完整 API，聚合子包功能）"
+        };
+
+        // 构图
+        const map = new Map(PKGS.map(p => [p.name, { ...p }]));
+        const inDegree = new Map(PKGS.map(p => [p.name, 0]));
+        for (const p of PKGS) {
+            for (const d of p.deps) {
+                if (map.has(d)) inDegree.set(d, (inDegree.get(d) || 0) + 1);
+            }
+        }
+        // 公共共享包：被依赖次数 >= 2
+        const COMMON_THRESHOLD = 2;
+        const commonSet = new Set([...inDegree.entries()]
+            .filter(([, deg]) => deg >= COMMON_THRESHOLD)
+            .map(([name]) => name)
+        );
+        // 入口包：入度为 0
+        const entries = PKGS.filter(p => (inDegree.get(p.name) || 0) === 0);
+
+        // 递归构建“嵌套树”，排除公共包，避免重复/环
+        function buildTree(name, visited = new Set()) {
+            if (!map.has(name) || visited.has(name)) return null;
+            visited.add(name);
+            const info = map.get(name);
+            const children = [];
+            for (const dep of info.deps) {
+                if (!map.has(dep)) continue;
+                if (dep === '@vue/shared') continue; // 基础通用：不在树中展示
+                const child = buildTree(dep, new Set(visited));
+                if (child) children.push(child);
+            }
+            return { name, info, children };
+        }
+
+        // 辅助：tooltip
+        const $tt = document.getElementById('tooltip');
+        function showTooltip(html, x, y) {
+            $tt.innerHTML = html;
+            $tt.style.left = Math.min(x + 14, window.innerWidth - 360) + 'px';
+            $tt.style.top = Math.min(y + 14, window.innerHeight - 10) + 'px';
+            $tt.style.opacity = 1; $tt.style.transform = 'translateY(0)';
+            $tt.setAttribute('aria-hidden', 'false');
+        }
+        function hideTooltip() {
+            $tt.style.opacity = 0; $tt.style.transform = 'translateY(-6px)';
+            $tt.setAttribute('aria-hidden', 'true');
+        }
+        function pkgTooltip(p) {
+            const depends = (p.deps && p.deps.length) ? p.deps.join(', ') : '—';
+            const indeg = inDegree.get(p.name) || 0;
+            const desc = (PURPOSES && PURPOSES[p.name]) ? PURPOSES[p.name] : '—';
+            return `
+        <div class="tt-name">${p.name}</div>
+        <div class="row"><div class="key">作用</div><div class="val">${desc}</div></div>
+        <div class="row"><div class="key">版本</div><div class="val">${p.version || '—'}</div></div>
+        <div class="row"><div class="key">main</div><div class="val">${p.main || '—'}</div></div>
+        <div class="row"><div class="key">module</div><div class="val">${p.module || '—'}</div></div>
+        <div class="row"><div class="key">types</div><div class="val">${p.types || '—'}</div></div>
+        <div class="row"><div class="key">依赖</div><div class="val">${depends}</div></div>
+        <div class="row"><div class="key">被依赖</div><div class="val">${indeg} 次</div></div>
+      `;
+        }
+
+        // 流程渲染（CSR / SSR）
+        function createStepEl(step) {
+            const el = document.createElement('div');
+            const hasMulti = Array.isArray(step.pkgs) && step.pkgs.length > 0;
+            const hasSingle = !!step.pkg;
+            el.className = 'flow-step' + ((hasSingle || hasMulti) ? ' pkg' : '');
+            // 标题
+            el.innerHTML = `<div>${step.label}</div>`;
+            // 芯片
+            if (hasMulti) {
+                const chips = document.createElement('div');
+                chips.className = 'flow-chips';
+                step.pkgs.forEach(name => {
+                    const chip = document.createElement('span');
+                    chip.className = 'flow-chip';
+                    chip.textContent = name;
+                    if (map.has(name)) {
+                        const p = map.get(name);
+                        chip.addEventListener('mousemove', (e) => showTooltip(pkgTooltip(p), e.clientX, e.clientY));
+                        chip.addEventListener('mouseleave', hideTooltip);
+                    }
+                    chips.appendChild(chip);
+                });
+                el.appendChild(chips);
+            } else if (hasSingle) {
+                const name = step.pkg;
+                const chips = document.createElement('div');
+                chips.className = 'flow-chips';
+                const chip = document.createElement('span');
+                chip.className = 'flow-chip';
+                chip.textContent = name;
+                if (map.has(name)) {
+                    const p = map.get(name);
+                    chip.addEventListener('mousemove', (e) => showTooltip(pkgTooltip(p), e.clientX, e.clientY));
+                    chip.addEventListener('mouseleave', hideTooltip);
+                }
+                chips.appendChild(chip);
+                el.appendChild(chips);
+            }
+            // 说明
+            const purposeOne = hasSingle && PURPOSES[step.pkg] ? PURPOSES[step.pkg] : '';
+            const note = step.note || purposeOne || '';
+            if (note) {
+                const n = document.createElement('div');
+                n.className = 'note';
+                n.textContent = note;
+                el.appendChild(n);
+            }
+            return el;
+        }
+        function renderFlow() {
+            const csr = [
+                { label: 'SFC 源码（.vue）', note: '单文件组件源代码' },
+                { label: 'SFC 解析/转换', pkgs: ['@vue/compiler-sfc'], note: '解析 <script setup>、样式、模板块' },
+                { label: '模板编译（AST/转换/代码生成）', pkgs: ['@vue/compiler-core'] },
+                { label: '平台化编译（DOM 指令/属性）', pkgs: ['@vue/compiler-dom'] },
+                { label: '渲染函数（render）/ VNode', note: '得到可执行的渲染函数，返回虚拟节点' },
+                { label: '运行时：组件/调度/响应式', pkgs: ['@vue/runtime-core', '@vue/reactivity'], note: '组件渲染与依赖追踪、调度更新' },
+                { label: '平台渲染（DOM）', pkgs: ['@vue/runtime-dom'], note: '属性/事件/样式/patch 到真实 DOM' },
+                { label: 'DOM' }
+            ];
+            const ssr = [
+                { label: '模板/SFC 源码' },
+                { label: 'SSR 编译', pkgs: ['@vue/compiler-ssr'] },
+                { label: '服务器渲染 HTML', pkgs: ['@vue/server-renderer'], note: 'renderToString / 流式输出' },
+                { label: 'HTML 字符串/流' },
+                { label: '客户端 Hydration', pkgs: ['@vue/runtime-dom', '@vue/runtime-core', '@vue/reactivity'], note: '复用已存在 DOM 绑定事件与状态' },
+                { label: '交互绑定' }
+            ];
+            const agg = [
+                { label: '聚合入口', pkgs: ['vue'], note: '对外暴露 API，聚合各子包能力' },
+                { label: '可选：兼容构建', pkgs: ['@vue/compat'], note: '协助从 Vue2 迁移至 Vue3' }
+            ];
+            const csrRow = document.getElementById('flow-csr');
+            const ssrRow = document.getElementById('flow-ssr');
+            const aggRow = document.getElementById('flow-agg');
+            function renderRow(row, steps) {
+                steps.forEach((s, i) => {
+                    row.appendChild(createStepEl(s));
+                    if (i < steps.length - 1) {
+                        const arrow = document.createElement('span');
+                        arrow.className = 'flow-arrow';
+                        arrow.textContent = '→';
+                        row.appendChild(arrow);
+                    }
+                });
+            }
+            renderRow(csrRow, csr);
+            renderRow(ssrRow, ssr);
+            renderRow(aggRow, agg);
+        }
+
+        // 渲染：左侧入口与嵌套
+        const $entries = document.getElementById('entries');
+        document.getElementById('entryCount').textContent = entries.length;
+
+        function renderNode(node, depth = 0) {
+            const p = node.info;
+            const desc = (typeof PURPOSES !== 'undefined' && PURPOSES[p.name]) ? PURPOSES[p.name] : '';
+            const div = document.createElement('div');
+            div.className = 'pkg ' + ('d' + Math.min(depth, 5));
+            div.innerHTML = `
+        <div class="name">${depth > 0 ? '<span class="arrow">↳</span>' : ''}${p.name}</div>
+        <div class="meta">
+          <span class="mini">v${p.version || '-'}</span>
+          ${p.main ? `<span class="mini">main: ${p.main}</span>` : ''}
+          ${p.module ? `<span class="mini">module: ${p.module}</span>` : ''}
+          ${p.types ? `<span class="mini">types: ${p.types}</span>` : ''}
+        </div>
+        ${desc ? `<div class="purpose">${desc}</div>` : ''}
+        ${node.children.length ? `<div class="children"></div>` : ''}
+      `;
+            div.addEventListener('mousemove', (e) => showTooltip(pkgTooltip(p), e.clientX, e.clientY));
+            div.addEventListener('mouseleave', hideTooltip);
+
+            if (node.children.length) {
+                const childrenWrap = div.querySelector('.children');
+                node.children.forEach(child => childrenWrap.appendChild(renderNode(child, depth + 1)));
+            }
+            return div;
+        }
+
+        function renderEntries() {
+            // 对入口按名称排序，稳定展示
+            const sorted = [...entries].sort((a, b) => a.name.localeCompare(b.name));
+            for (const ent of sorted) {
+                const tree = buildTree(ent.name);
+                const wrap = document.createElement('div');
+                wrap.className = 'entry';
+
+                const head = document.createElement('div');
+                head.className = 'entry-head';
+                head.innerHTML = `
+          <div class="entry-title">
+            <span class="chip">入口包</span>
+            <span>${ent.name}</span>
+          </div>
+          <div class="hint">公共依赖在层级中显示（@vue/shared 已省略），右侧为汇总</div>
+        `;
+                wrap.appendChild(head);
+
+                // 根节点卡片
+                if (tree) {
+                    wrap.appendChild(renderNode(tree, 0));
+                }
+
+                // 在底部列出该入口引用到的“公共共享包”引用（不重复）
+                const commonsRefs = Array.from(commonSet).filter(n => n !== '@vue/shared').filter(n => {
+                    // 入口可达且属于其直接或间接依赖
+                    function reachable(src, target, seen = new Set()) {
+                        if (src === target) return true;
+                        if (seen.has(src)) return false;
+                        seen.add(src);
+                        const info = map.get(src);
+                        for (const d of info.deps) {
+                            if (!map.has(d)) continue;
+                            if (reachable(d, target, seen)) return true;
+                        }
+                        return false;
+                    }
+                    return reachable(ent.name, n);
+                }).sort((a, b) => (inDegree.get(b) - inDegree.get(a)) || a.localeCompare(b));
+
+                if (commonsRefs.length) {
+                    const refs = document.createElement('div');
+                    refs.className = 'refs';
+                    commonsRefs.forEach(name => {
+                        const p = map.get(name);
+                        const chip = document.createElement('span');
+                        chip.className = 'ref';
+                        chip.textContent = name + ` (×${inDegree.get(name)})`;
+                        chip.addEventListener('mousemove', (e) => showTooltip(pkgTooltip(p), e.clientX, e.clientY));
+                        chip.addEventListener('mouseleave', hideTooltip);
+                        refs.appendChild(chip);
+                    });
+                    wrap.appendChild(refs);
+                }
+
+                $entries.appendChild(wrap);
+            }
+        }
+
+        // 渲染：右侧公共包
+        const $commons = document.getElementById('commons');
+        const commonList = [...commonSet].filter(n => n !== '@vue/shared').map(n => map.get(n))
+            .sort((a, b) => (inDegree.get(b.name) - inDegree.get(a.name)) || a.name.localeCompare(b.name));
+        document.getElementById('commonCount').textContent = commonList.length;
+
+        function renderCommons() {
+            if (!commonList.length) {
+                const empty = document.createElement('div');
+                empty.style.color = 'var(--muted)';
+                empty.style.padding = '12px';
+                empty.textContent = '无公共共享包';
+                $commons.appendChild(empty);
+                return;
+            }
+            commonList.forEach(p => {
+                const row = document.createElement('div');
+                row.className = 'common-item';
+                row.innerHTML = `
+          <div class="left-part">
+            <span class="dot"></span>
+            <div>
+              <div style="font-weight:600">${p.name}</div>
+              <div style="color:var(--muted); font-size:12px">v${p.version || '-'}</div>
+            </div>
+          </div>
+          <span class="count">被依赖 ${inDegree.get(p.name)} 次</span>
+        `;
+                row.addEventListener('mousemove', (e) => showTooltip(pkgTooltip(p), e.clientX, e.clientY));
+                row.addEventListener('mouseleave', hideTooltip);
+                $commons.appendChild(row);
+            });
+        }
+
+        renderFlow();
+        renderEntries();
+        renderCommons();
+        window.addEventListener('scroll', () => hideTooltip(), { passive: true });
+    </script>
+</body>
+
+</html>
