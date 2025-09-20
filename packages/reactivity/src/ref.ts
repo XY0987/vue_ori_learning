@@ -45,6 +45,14 @@ export function isRef(r: any): r is Ref {
   return r ? r[ReactiveFlags.IS_REF] === true : false
 }
 
+/* 
+下面这种写法会报错，原因是r类型没有这个属性，
+所以采用上述类型重载的写法，这样写一方面是实现方面绕过了类型检查，另一方面是保存了更好的类型提示
+ */
+// export function isRef<T>(r: Ref<T> | unknown): r is Ref<T> {
+//   return r ? r[ReactiveFlags.IS_REF] === true : false
+// }
+
 /**
  * Takes an inner value and returns a reactive and mutable ref object, which
  * has a single property `.value` that points to the inner value.
@@ -52,6 +60,7 @@ export function isRef(r: any): r is Ref {
  * @param value - The object to wrap in the ref.
  * @see {@link https://vuejs.org/api/reactivity-core.html#ref}
  */
+// 类型重载的目的是为了给用户更好的类型提示
 export function ref<T>(
   value: T,
 ): [T] extends [Ref] ? IfAny<T, Ref<T>, T> : Ref<UnwrapRef<T>, UnwrapRef<T> | T>
