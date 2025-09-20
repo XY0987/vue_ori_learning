@@ -1,3 +1,4 @@
+// vNode 类型标记，普通元素、组件 ....
 export enum ShapeFlags {
   ELEMENT = 1,
   FUNCTIONAL_COMPONENT = 1 << 1,

@@ -1,5 +1,10 @@
 import { makeMap } from './makeMap'
-
+/*
+通用的工具函数合集
+- 类型判断
+- 字符串处理（aa-bb => aaBb）
+- ...
+*/
 export const EMPTY_OBJ: { readonly [key: string]: any } = __DEV__
   ? Object.freeze({})
   : {}

@@ -1,3 +1,4 @@
+// 类型工具
 export type Prettify<T> = { [K in keyof T]: T[K] } & {}
 
 export type UnionToIntersection<U> = (

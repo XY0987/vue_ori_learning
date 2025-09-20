@@ -1,5 +1,8 @@
 import { makeMap } from './makeMap'
 
+/*
+dom属性配置文件
+*/
 /**
  * On the client we only need to offer special cases for boolean attributes that
  * have different names from their corresponding dom properties:

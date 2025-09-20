@@ -1,7 +1,9 @@
 // These tag configs are shared between compiler-dom and runtime-dom, so they
 // must be extracted in shared to avoid creating a dependency between the two.
 import { makeMap } from './makeMap'
-
+/*
+dom元素标签配置文件
+*/
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element
 const HTML_TAGS =
   'html,body,base,head,link,meta,style,title,address,article,aside,footer,' +

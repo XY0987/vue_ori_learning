@@ -1,5 +1,7 @@
 import { isArray, isDate, isObject, isSymbol } from './general'
-
+/*
+判断数据是否相等
+*/
 function looseCompareArrays(a: any[], b: any[]) {
   if (a.length !== b.length) return false
   let equal = true

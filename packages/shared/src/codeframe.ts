@@ -1,5 +1,12 @@
 const range: number = 2
-
+/* 
+用于在错误信息中高亮显示源代码中的特定部分
+主要用途(js代码)：
+- 解析源代码并分割成行
+- 计算字符位置对应的行行号
+- 在错误位置下方添加^标记
+- 返回带行号和错误标记的格式化代码片段
+*/
 export function generateCodeFrame(
   source: string,
   start = 0,
@@ -60,5 +67,6 @@ export function generateCodeFrame(
       break
     }
   }
+  console.error('🚀 ~ generateCodeFrame ~ res:', res.join('\n'))
   return res.join('\n')
 }

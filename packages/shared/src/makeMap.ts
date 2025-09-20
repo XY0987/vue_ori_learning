@@ -5,7 +5,9 @@
  * \/\*#\_\_PURE\_\_\*\/
  * So that rollup can tree-shake them if necessary.
  */
-
+/*
+根据一个字符串生成一个对象，返回一个函数，判断一个key是否在对象中
+*/
 /*@__NO_SIDE_EFFECTS__*/
 export function makeMap(str: string): (key: string) => boolean {
   const map = Object.create(null)

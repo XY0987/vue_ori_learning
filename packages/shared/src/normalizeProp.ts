@@ -1,7 +1,11 @@
 import { hyphenate, isArray, isObject, isString } from './general'
 
 export type NormalizedStyle = Record<string, string | number>
-
+/*
+规范props的工具文件
+- 样式规范化，将各种格式的样式统一为对象格式（字符串、数组、对象）
+- 类名规范化，将各种格式的类名统一为字符串格式（字符串、数组、对象）
+*/
 export function normalizeStyle(
   value: unknown,
 ): NormalizedStyle | string | undefined {

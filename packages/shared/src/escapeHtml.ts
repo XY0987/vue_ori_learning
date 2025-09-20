@@ -1,6 +1,7 @@
 const escapeRE = /["'&<>]/
-
+// html转译
 export function escapeHtml(string: unknown): string {
+  console.log('🚀 ~ escapeHtml ~ string:', string)
   const str = '' + string
   const match = escapeRE.exec(str)
 

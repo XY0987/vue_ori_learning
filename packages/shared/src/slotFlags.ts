@@ -1,3 +1,8 @@
+/*
+- STABLE,插槽内容在组件更新期间不会变化
+- DYNAMIC,动态插槽（v-if，v-for）
+- FORWARDED,插槽内容来自父组件，父组件更新时，子组件也会更新
+*/
 export enum SlotFlags {
   /**
    * Stable slots that only reference slot props or context state. The slot

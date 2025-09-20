@@ -21,6 +21,7 @@ const isRef = (val: any): val is { value: unknown } => {
  * For converting {{ interpolation }} values to displayed strings.
  * @private
  */
+// 将各种值转换为适合显示的字符串
 export const toDisplayString = (val: unknown): string => {
   return isString(val)
     ? val
