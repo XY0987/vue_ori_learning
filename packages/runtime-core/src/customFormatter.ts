@@ -11,7 +11,15 @@ import {
 import { EMPTY_OBJ, extend, isArray, isFunction, isObject } from '@vue/shared'
 import type { ComponentInternalInstance, ComponentOptions } from './component'
 import type { ComponentPublicInstance } from './componentPublicInstance'
+/*
+用于为chrome开发者工具提供自定义的对象格式化显示功能
+1. 在开发模式下，想chrome DevTools注册自定义格式化器
+2. 没货vue相关对象在开发者工具中的显示方式
+3. 支持格式化vue示例、响应式对象
 
+实现原理：
+通过window.devtoolsFormatters API注册格式化器
+*/
 export function initCustomFormatter(): void {
   /* eslint-disable no-restricted-globals */
   if (!__DEV__ || typeof window === 'undefined') {
