@@ -125,10 +125,24 @@ class RefImpl<T = any> {
 
   constructor(value: T, isShallow: boolean) {
     this._rawValue = isShallow ? value : toRaw(value)
+    // 如果不是isShallow，调用toReactive方法，这个方法会判断是否是对象，如果是对象，则建立reactive的响应式
     this._value = isShallow ? value : toReactive(value)
     this[ReactiveFlags.IS_SHALLOW] = isShallow
   }
 
+  /*
+   ref一般用于普通数据类型，所有仅需要追踪单个值的变化，可以使用内置的dep（链表），来实现即可
+   如果传入一个对象，那么会在初始化的时候调用toReactive进行reactive收集，但是这里仍需要监听get和set形成链表依赖
+   原因是：
+      // ref只追踪.value的变化，但是对象内部的变化就依赖reactive的实现
+      const state = ref({ count: 0 })
+
+      // 情况1：替换整个对象（触发 ref 层依赖）
+      state.value = { count: 1 }
+
+      // 情况2：修改对象属性（触发 reactive 层依赖）
+      state.value.count++
+  */
   get value() {
     if (__DEV__) {
       this.dep.track({

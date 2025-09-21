@@ -259,6 +259,17 @@ export const ARRAY_ITERATE_KEY: unique symbol = Symbol(
  * @param type - Defines the type of access to the reactive property.
  * @param key - Identifier of the reactive property to track.
  */
+/*
+reactive使用这个方法建立依赖
+ref不用，因为ref只用对单个值做响应式处理
+
+结构示意：
+  targetMap: {
+    [响应式对象]: Map<{
+      [属性名]: Dep实例
+    }>
+  }
+*/
 export function track(target: object, type: TrackOpTypes, key: unknown): void {
   if (shouldTrack && activeSub) {
     let depsMap = targetMap.get(target)
