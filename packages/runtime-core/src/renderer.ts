@@ -1286,6 +1286,7 @@ function baseCreateRenderer(
     namespace: ElementNamespace,
     optimized,
   ) => {
+    console.log('🚀 ~ setupRenderEffect ~ instance:', instance)
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
         let vnodeHook: VNodeHook | null | undefined

@@ -106,6 +106,9 @@ export class Dep {
   }
 
   track(debugInfo?: DebuggerEventExtraInfo): Link | undefined {
+    /*
+    activeSub，当前运行的effect，通过render函数创建effect，调用render函数的runIfDirty方法，触发run方法，来对activeSub赋值
+    */
     if (!activeSub || !shouldTrack || activeSub === this.computed) {
       return
     }
@@ -278,6 +281,7 @@ export function track(target: object, type: TrackOpTypes, key: unknown): void {
     }
     let dep = depsMap.get(key)
     if (!dep) {
+      // depsMap结构中的value是Dep示例
       depsMap.set(key, (dep = new Dep()))
       dep.map = depsMap
       dep.key = key
