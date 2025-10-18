@@ -145,9 +145,15 @@ export class ReactiveEffect<T = any>
     }
     if (!(this.flags & EffectFlags.NOTIFIED)) {
       batch(this)
+      console.log('🚀 ~ ReactiveEffect ~ notify ~ this:', this)
     }
   }
 
+  /*
+    执行副作用函数
+    清理旧依赖
+    准备新依赖
+  */
   run(): T {
     // TODO cleanupEffect
 
@@ -192,6 +198,7 @@ export class ReactiveEffect<T = any>
     }
   }
 
+  // 依赖函数执行
   trigger(): void {
     if (this.flags & EffectFlags.PAUSED) {
       pausedQueueEffects.add(this)
@@ -236,14 +243,16 @@ export class ReactiveEffect<T = any>
 let batchDepth = 0
 let batchedSub: Subscriber | undefined
 let batchedComputed: Subscriber | undefined
-
+// 将订阅函数添加到不同的队列中
 export function batch(sub: Subscriber, isComputed = false): void {
   sub.flags |= EffectFlags.NOTIFIED
+  // 计算属性添加到batchedComputed队列中
   if (isComputed) {
     sub.next = batchedComputed
     batchedComputed = sub
     return
   }
+  // 普通响应式依赖添加到batchedSub队列中
   sub.next = batchedSub
   batchedSub = sub
 }
@@ -257,13 +266,14 @@ export function startBatch(): void {
 
 /**
  * Run batched effects when all batches have ended
+ * 当所有批处理结束时运行批处理效果
  * @internal
  */
 export function endBatch(): void {
   if (--batchDepth > 0) {
     return
   }
-
+  // 处理计算属性队列
   if (batchedComputed) {
     let e: Subscriber | undefined = batchedComputed
     batchedComputed = undefined
@@ -276,6 +286,7 @@ export function endBatch(): void {
   }
 
   let error: unknown
+  // 处理普通响应式依赖队列
   while (batchedSub) {
     let e: Subscriber | undefined = batchedSub
     batchedSub = undefined
