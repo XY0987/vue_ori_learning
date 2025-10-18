@@ -36,11 +36,20 @@ export class Link {
    * - After the run, links with version -1 (that were never used) are cleaned
    *   up
    */
+  /*
+   * -在每个效果运行之前，所有以前的深度链接的版本重置为-1
+   * -在运行期间，链接的版本在访问时与源深度同步
+   * -运行后，版本为-1的链接（从未使用过的）将被清除
+   *了
+   */
   version: number
 
   /**
    * Pointers for doubly-linked lists
    */
+  /*
+    双链表的指针
+  */
   nextDep?: Link
   prevDep?: Link
   nextSub?: Link
@@ -69,28 +78,44 @@ export class Dep {
   /**
    * Link between this dep and the current active effect
    */
+  /*
+    此深度与当前激活效果之间的链接
+  */
   activeLink?: Link = undefined
 
   /**
    * Doubly linked list representing the subscribing effects (tail)
    */
+  /*
+    表示订阅效果的双链表（尾部）
+  */
   subs?: Link = undefined
 
   /**
    * Doubly linked list representing the subscribing effects (head)
    * DEV only, for invoking onTrigger hooks in correct order
    */
+  /*
+    表示订阅效果的双链表（头部）
+    仅限DEV，以正确顺序调用onTrigger钩子
+  */
   subsHead?: Link
 
   /**
    * For object property deps cleanup
    */
+  /*
+    用于对象属性深度清理
+  */
   map?: KeyToDepMap = undefined
   key?: unknown = undefined
 
   /**
    * Subscriber counter
    */
+  /*
+    订阅者计数器
+  */
   sc: number = 0
 
   /**
@@ -114,8 +139,10 @@ export class Dep {
     }
 
     let link = this.activeLink
+    // link的sub字段存储的是
     if (link === undefined || link.sub !== activeSub) {
       link = this.activeLink = new Link(activeSub, this)
+      console.log('🚀 ~ Dep ~ track ~ activeSub:', activeSub)
 
       // add the link to the activeEffect as a dep (as tail)
       if (!activeSub.deps) {
@@ -180,6 +207,9 @@ export class Dep {
         // subs are notified and batched in reverse-order and then invoked in
         // original order at the end of the batch, but onTrigger hooks should
         // be invoked in original order here.
+        //以相反的顺序通知和批处理子节点，然后在
+        //原始订单在批处理结束时，但onTrigger钩子应该
+        //按原顺序调用。
         for (let head = this.subsHead; head; head = head.nextSub) {
           if (head.sub.onTrigger && !(head.sub.flags & EffectFlags.NOTIFIED)) {
             head.sub.onTrigger(
@@ -198,6 +228,9 @@ export class Dep {
           // if notify() returns `true`, this is a computed. Also call notify
           // on its dep - it's called here instead of inside computed's notify
           // in order to reduce call stack depth.
+          //如果notify（）返回‘ true ’，这是一个计算值。同时调用notify
+          //在它的深层——它在这里调用，而不是在computed的notify中调用
+          //为了减少调用堆栈深度。
           ;(link.sub as ComputedRefImpl).dep.notify()
         }
       }
