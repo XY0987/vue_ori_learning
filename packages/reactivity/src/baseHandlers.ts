@@ -151,6 +151,7 @@ class MutableReactiveHandler extends BaseReactiveHandler {
         oldValue = toRaw(oldValue)
         value = toRaw(value)
       }
+      // 不是应该数组，原始值是一个ref对象，新值不是一个ref对象
       if (!isArray(target) && isRef(oldValue) && !isRef(value)) {
         if (isOldValueReadonly) {
           if (__DEV__) {

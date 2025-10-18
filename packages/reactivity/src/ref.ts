@@ -158,12 +158,14 @@ class RefImpl<T = any> {
 
   set value(newValue) {
     const oldValue = this._rawValue
+    // 判断是否时shallowRef值或者新赋值的对象是否时应该shallow或者readonly值，如果是，则直接赋值，否则调用toRaw和toReactive进行处理
     const useDirectValue =
       this[ReactiveFlags.IS_SHALLOW] ||
       isShallow(newValue) ||
       isReadonly(newValue)
     newValue = useDirectValue ? newValue : toRaw(newValue)
     if (hasChanged(newValue, oldValue)) {
+      // 更新原始值
       this._rawValue = newValue
       this._value = useDirectValue ? newValue : toReactive(newValue)
       if (__DEV__) {

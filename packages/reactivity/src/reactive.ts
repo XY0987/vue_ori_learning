@@ -54,8 +54,12 @@ function targetTypeMap(rawType: string) {
       return TargetType.INVALID
   }
 }
-
+// 确定应该值是否可以被转换为响应式对象以及应该转换为那种类型的响应式对象
 function getTargetType(value: Target) {
+  /*
+    是否跳过响应式转换的标记
+    对象是否不可拓展
+  */
   return value[ReactiveFlags.SKIP] || !Object.isExtensible(value)
     ? TargetType.INVALID
     : targetTypeMap(toRawType(value))
@@ -273,6 +277,8 @@ function createReactiveObject(
   }
   // target is already a Proxy, return it.
   // exception: calling readonly() on a reactive object
+  //目标已经是一个代理，返回它
+  //异常：在响应对象上调用readonly（）
   if (
     target[ReactiveFlags.RAW] &&
     !(isReadonly && target[ReactiveFlags.IS_REACTIVE])
@@ -280,6 +286,7 @@ function createReactiveObject(
     return target
   }
   // only specific value types can be observed.
+  // 只能观察到特定的值类型。
   const targetType = getTargetType(target)
   if (targetType === TargetType.INVALID) {
     return target

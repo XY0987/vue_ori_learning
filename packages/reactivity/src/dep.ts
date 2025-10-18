@@ -203,6 +203,9 @@ export class Dep {
   notify(debugInfo?: DebuggerEventExtraInfo): void {
     startBatch()
     try {
+      /*
+        dev模式从头部开始通知（实际运行没有命中这个）
+      */
       if (__DEV__) {
         // subs are notified and batched in reverse-order and then invoked in
         // original order at the end of the batch, but onTrigger hooks should
@@ -213,6 +216,7 @@ export class Dep {
         for (let head = this.subsHead; head; head = head.nextSub) {
           if (head.sub.onTrigger && !(head.sub.flags & EffectFlags.NOTIFIED)) {
             head.sub.onTrigger(
+              // 合并对象，将debugInfo合并到effect中
               extend(
                 {
                   effect: head.sub,
@@ -224,6 +228,7 @@ export class Dep {
         }
       }
       for (let link = this.subs; link; link = link.prevSub) {
+        // 调用通知函数，触发对应渲染
         if (link.sub.notify()) {
           // if notify() returns `true`, this is a computed. Also call notify
           // on its dep - it's called here instead of inside computed's notify
@@ -314,7 +319,7 @@ export function track(target: object, type: TrackOpTypes, key: unknown): void {
     }
     let dep = depsMap.get(key)
     if (!dep) {
-      // depsMap结构中的value是Dep示例
+      // depsMap结构中的value是Dep实例
       depsMap.set(key, (dep = new Dep()))
       dep.map = depsMap
       dep.key = key
@@ -373,6 +378,7 @@ export function trigger(
 
   startBatch()
 
+  // 对不同的对象类型做触发函数处理
   if (type === TriggerOpTypes.CLEAR) {
     // collection being cleared
     // trigger all effects for target
