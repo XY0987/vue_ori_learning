@@ -155,12 +155,20 @@ export class Dep {
 
       addSub(link)
     } else if (link.version === -1) {
+      // 当version为-1时，说明上次有使用该link，本次没有使用，后续需要被清理
       // reused from last run - already a sub, just sync version
+      // 从上次运行中重用-已经是子版本，只是同步版本
       link.version = this.version
 
       // If this dep has a next, it means it's not at the tail - move it to the
       // tail. This ensures the effect's dep list is in the order they are
       // accessed during evaluation.
+      //如果这个深度有一个下一个，这意味着它不是在尾部-移动到
+      //尾。这确保了效果的深度列表是按顺序排列的
+      //在求值时访问。
+      /*
+        重新链接依赖关系，将本次使用到的link，移动到尾部（最近访问的更可能被再次访问）
+      */
       if (link.nextDep) {
         const next = link.nextDep
         next.prevDep = link.prevDep
@@ -201,6 +209,7 @@ export class Dep {
   }
 
   notify(debugInfo?: DebuggerEventExtraInfo): void {
+    // 开始批处理
     startBatch()
     try {
       /*
@@ -251,6 +260,8 @@ function addSub(link: Link) {
     const computed = link.dep.computed
     // computed getting its first subscriber
     // enable tracking + lazily subscribe to all its deps
+    // 计算得到第一个订阅者
+    //启用跟踪+惰性订阅所有深度
     if (computed && !link.dep.subs) {
       computed.flags |= EffectFlags.TRACKING | EffectFlags.DIRTY
       for (let l = computed.deps; l; l = l.nextDep) {
