@@ -135,6 +135,9 @@ export class Dep {
     /*
     activeSub，当前运行的effect，通过render函数创建effect，调用render函数的runIfDirty方法，触发run方法，来对activeSub赋值
     */
+    /* shouldTrack会在数组的push等方法中变为false,原因是：
+      数组中push这些方法会读取length属性，然后又会修改length属性，这样会造成死循环，所以要屏蔽一下
+    */
     if (!activeSub || !shouldTrack || activeSub === this.computed) {
       return
     }
@@ -399,6 +402,7 @@ export function trigger(
     const targetIsArray = isArray(target)
     const isArrayIndex = targetIsArray && isIntegerKey(key)
 
+    // 数组的length属性，单独处理，因为修改length，for in这些操作需要都执行一遍
     if (targetIsArray && key === 'length') {
       const newLength = Number(newValue)
       depsMap.forEach((dep, key) => {
