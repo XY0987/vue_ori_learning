@@ -142,6 +142,15 @@ function createInstrumentations(
         ? target.has(key)
         : target.has(key) || target.has(rawKey)
     },
+    /*
+      拦截map的forEach方法，
+      虽然调用map的foreach方法会触发get方法，但是由于反射，遍历的对象是原始的map，不会触发
+      get方法，这就导致遍历出来的对象不具备响应式，又由于这个是map特定的内容，所以只拦截了map的方法
+
+      这个触发get方法是指访问foreach方法时触发的get方法，然后遍历循环的内容不会触发get方法，
+      这个原因是访问的原始对象的值，不具备响应式
+      然后这个又只属于map的特殊逻辑，所以不放在get拦截方法的底层来做，而仅仅绑定map
+    */
     forEach(this: IterableCollections, callback: Function, thisArg?: unknown) {
       const observed = this
       const target = observed[ReactiveFlags.RAW]
