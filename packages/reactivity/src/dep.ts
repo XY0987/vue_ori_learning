@@ -60,6 +60,7 @@ export class Link {
     public sub: Subscriber,
     public dep: Dep,
   ) {
+    // https://juejin.cn/post/7425134213748031514
     this.version = dep.version
     this.nextDep =
       this.prevDep =
@@ -155,7 +156,7 @@ export class Dep {
 
       addSub(link)
     } else if (link.version === -1) {
-      // 当version为-1时，说明上次有使用该link，本次没有使用，后续需要被清理
+      // 更新后，会将link的version更新为-1（prepareDeps方法）
       // reused from last run - already a sub, just sync version
       // 从上次运行中重用-已经是子版本，只是同步版本
       link.version = this.version

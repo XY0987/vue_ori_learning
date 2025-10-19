@@ -163,7 +163,9 @@ export class ReactiveEffect<T = any>
     }
 
     this.flags |= EffectFlags.RUNNING
+    // 清理旧的依赖
     cleanupEffect(this)
+    // 重置为-1，并标记为待验证，等待后面运行依赖函数时，会重新标记，最后将哪些仍为-1的依赖清除
     prepareDeps(this)
     const prevEffect = activeSub
     const prevShouldTrack = shouldTrack
@@ -179,6 +181,7 @@ export class ReactiveEffect<T = any>
             'this is likely a Vue internal bug.',
         )
       }
+      // 清理旧依赖
       cleanupDeps(this)
       activeSub = prevEffect
       shouldTrack = prevShouldTrack
@@ -308,7 +311,7 @@ export function endBatch(): void {
 
   if (error) throw error
 }
-
+// 将所有已有依赖的版本号设置未-1（link）
 function prepareDeps(sub: Subscriber) {
   // Prepare deps for tracking, starting from the head
   for (let link = sub.deps; link; link = link.nextDep) {
@@ -352,6 +355,7 @@ function cleanupDeps(sub: Subscriber) {
 
 function isDirty(sub: Subscriber): boolean {
   for (let link = sub.deps; link; link = link.nextDep) {
+    // 使用version来判断是否需要更新：https://juejin.cn/post/7416908856867078182
     if (
       link.dep.version !== link.version ||
       (link.dep.computed &&
@@ -373,6 +377,11 @@ function isDirty(sub: Subscriber): boolean {
  * Returning false indicates the refresh failed
  * @internal
  */
+/*
+  计算属性值缓存
+  依赖变化时自动重新计算
+  避免不必要的重复更新
+*/
 export function refreshComputed(computed: ComputedRefImpl): undefined {
   if (
     computed.flags & EffectFlags.TRACKING &&
@@ -384,6 +393,9 @@ export function refreshComputed(computed: ComputedRefImpl): undefined {
 
   // Global version fast path when no reactive changes has happened since
   // last refresh.
+  //全局版本快速路径，当没有响应式更改发生时
+  //最后一次刷新。
+  // globalVersion 是全局版本号，每次更新都会自增
   if (computed.globalVersion === globalVersion) {
     return
   }
@@ -395,6 +407,12 @@ export function refreshComputed(computed: ComputedRefImpl): undefined {
   // fast path above for caching.
   // #12337 if computed has no deps (does not rely on any reactive data) and evaluated,
   // there is no need to re-evaluate.
+  //在SSR中，没有渲染效果，因此计算机没有订阅者
+  //因此不跟踪深度，因此我们不能依赖脏检查。
+  //相反，计算总是重新计算并依赖于globalVersion
+  //快速缓存路径。
+  // #12337如果computed没有深度（不依赖于任何响应数据）并且被评估，
+  //不需要重新计算。
   if (
     !computed.isSSR &&
     computed.flags & EffectFlags.EVALUATED &&
