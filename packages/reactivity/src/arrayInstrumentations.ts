@@ -4,6 +4,7 @@ import { isProxy, isShallow, toRaw, toReactive } from './reactive'
 import { ARRAY_ITERATE_KEY, track } from './dep'
 import { isArray } from '@vue/shared'
 
+// 对数组方法的拦截和增强，实现数组操作能够触发vue响应式更新
 /**
  * Track array iteration and return:
  * - if input is reactive: a cloned raw array with reactive values

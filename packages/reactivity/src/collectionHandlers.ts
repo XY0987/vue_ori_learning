@@ -18,6 +18,7 @@ import {
 } from '@vue/shared'
 import { warn } from './warning'
 
+// 对map、weakMap、set、weakSet的拦截和增强，实现操作能够触发vue响应式更新
 type CollectionTypes = IterableCollections | WeakCollections
 
 type IterableCollections = (Map<any, any> | Set<any>) & Target

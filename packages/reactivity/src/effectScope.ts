@@ -3,6 +3,7 @@ import { warn } from './warning'
 
 export let activeEffectScope: EffectScope | undefined
 
+// effect作用域管理
 export class EffectScope {
   /**
    * @internal

@@ -133,6 +133,7 @@ class BaseReactiveHandler implements ProxyHandler<Target> {
   }
 }
 
+// 用于reactive的handler，满足响应式的一些处理
 class MutableReactiveHandler extends BaseReactiveHandler {
   constructor(isShallow = false) {
     super(false, isShallow)
