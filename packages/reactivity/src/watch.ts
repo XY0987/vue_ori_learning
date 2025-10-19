@@ -133,13 +133,17 @@ export function watch(
     )
   }
 
+  // 实现不同深度监听情况的辅助函数
   const reactiveGetter = (source: object) => {
     // traverse will happen in wrapped getter below
+    // 遍历将在下面的封装getter中进行
     if (deep) return source
     // for `deep: false | 0` or shallow reactive, only traverse root-level properties
+    // 对于“deep: false | 0”或浅层反应，只遍历根级属性
     if (isShallow(source) || deep === false || deep === 0)
       return traverse(source, 1)
     // for `deep: undefined` on a reactive object, deeply traverse all properties
+    // 对于响应对象上的“deep: undefined”，深度遍历所有属性（为了实现没有访问的属性变化也能监听到）
     return traverse(source)
   }
 
@@ -328,6 +332,7 @@ export function watch(
   return watchHandle
 }
 
+// 用于递归遍历对象/集合的核心工具函数，深度访问对象属性以建立依赖关系
 export function traverse(
   value: unknown,
   depth: number = Infinity,

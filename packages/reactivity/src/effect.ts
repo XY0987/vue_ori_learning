@@ -395,7 +395,7 @@ export function refreshComputed(computed: ComputedRefImpl): undefined {
   // last refresh.
   //全局版本快速路径，当没有响应式更改发生时
   //最后一次刷新。
-  // globalVersion 是全局版本号，每次更新都会自增
+  // globalVersion 是全局版本号，每次响应式更新都会自增
   if (computed.globalVersion === globalVersion) {
     return
   }
