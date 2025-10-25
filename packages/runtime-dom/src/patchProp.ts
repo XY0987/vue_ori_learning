@@ -21,7 +21,7 @@ const isNativeOn = (key: string) =>
   key.charCodeAt(2) < 123
 
 type DOMRendererOptions = RendererOptions<Node, Element>
-
+// 包含所有的dom元素属性比较，最终只对runtime-core暴露patchProp进行调用
 export const patchProp: DOMRendererOptions['patchProp'] = (
   el,
   key,
@@ -47,6 +47,7 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
         ? ((key = key.slice(1)), false)
         : shouldSetAsProp(el, key, nextValue, isSVG)
   ) {
+    // 上面判断了属性是应该设置在props中还是在attrs中
     patchDOMProp(el, key, nextValue, parentComponent)
     // #6007 also set form state as attributes so they work with
     // <input type="reset"> or libs / extensions that expect attributes

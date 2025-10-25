@@ -72,6 +72,7 @@ let renderer: Renderer<Element | ShadowRoot> | HydrationRenderer
 let enabledHydration = false
 
 function ensureRenderer() {
+  // 传递options，其中是操作dom元素的api
   return (
     renderer ||
     (renderer = createRenderer<Node, Element | ShadowRoot>(rendererOptions))
@@ -95,6 +96,7 @@ export const hydrate = ((...args) => {
   ensureHydrationRenderer().hydrate(...args)
 }) as RootHydrateFunction
 
+// 打包后，createApp传递的参数是（组件内容）：_export_sfc(_sfc_main, [["__scopeId", "data-v-830c40eb"]])
 export const createApp = ((...args) => {
   const app = ensureRenderer().createApp(...args)
 
@@ -155,6 +157,7 @@ export const createSSRApp = ((...args) => {
 
   const { mount } = app
   app.mount = (containerOrSelector: Element | ShadowRoot | string): any => {
+    // 如果传入的是字符串，则转换为dom元素
     const container = normalizeContainer(containerOrSelector)
     if (container) {
       return mount(container, true, resolveRootNamespace(container))

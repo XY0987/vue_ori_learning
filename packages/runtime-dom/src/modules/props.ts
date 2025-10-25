@@ -59,6 +59,11 @@ export function patchDOMProp(
     const type = typeof el[key]
     if (type === 'boolean') {
       // e.g. <select multiple> compiles to { multiple: '' }
+      /*
+        处理哪些需要转换为boolean的属性
+          比如说disabled，只写这个属性对于开发者来说是true
+          但是不处理的话，会变成空字符串，然后就会被处理为false
+      */
       value = includeBooleanAttr(value)
     } else if (value == null && type === 'string') {
       // e.g. <div :id="null">
@@ -96,6 +101,7 @@ export function patchDOMProp(
   // some properties has getter, no setter, will error in 'use strict'
   // eg. <select :type="null"></select> <select :willValidate="null"></select>
   try {
+    // 直接dom元素赋值，更符合浏览器行为
     el[key] = value
   } catch (e: any) {
     // do not warn if value is auto-coerced from nullish values

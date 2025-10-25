@@ -41,6 +41,7 @@ export function patchEvent(
   instance: ComponentInternalInstance | null = null,
 ): void {
   // vei = vue event invokers
+  // 每个元素都有一个vei对象，用来存储事件处理函数
   const invokers = el[veiKey] || (el[veiKey] = {})
   const existingInvoker = invokers[rawName]
   if (nextValue && existingInvoker) {
@@ -52,6 +53,10 @@ export function patchEvent(
     const [name, options] = parseName(rawName)
     if (nextValue) {
       // add
+      /*
+        事件处理创建一个invoker
+        这样的话更新时只用更新invoker.value的值就可以了（这样做法更优雅）
+      */
       const invoker = (invokers[rawName] = createInvoker(
         __DEV__
           ? sanitizeEventValue(nextValue, rawName)
@@ -107,6 +112,10 @@ function createInvoker(
     // or events fired from iframes, e.g. #2513)
     // The handler would only fire if the event passed to it was fired
     // AFTER it was attached.
+    /*
+      屏蔽所有绑定事件万余事件触发事件的事件处理函数执行
+      《vue设计与实现》P201——P204
+    */
     if (!e._vts) {
       e._vts = Date.now()
     } else if (e._vts <= invoker.attached) {
@@ -120,6 +129,7 @@ function createInvoker(
     )
   }
   invoker.value = initialValue
+  // 记录事件处理函数绑定的时间，用于屏蔽事件处理函数的执行
   invoker.attached = getNow()
   return invoker
 }

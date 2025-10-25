@@ -310,6 +310,12 @@ export const queuePostRenderEffect: (
  * })
  * ```
  */
+/*
+  工厂函数，不直接声明render函数的目的：
+  1. 更加灵活，可以根据不同的渲染选项生成不同的渲染器实例
+  2. 彼此解耦，将渲染器的创建与核心渲染逻辑分离，定制不同的渲染行为
+  3. 可复用、扩展性高
+*/
 export function createRenderer<
   HostNode = RendererNode,
   HostElement = RendererElement,
@@ -354,6 +360,7 @@ function baseCreateRenderer(
     setDevtoolsHook(target.__VUE_DEVTOOLS_GLOBAL_HOOK__, target)
   }
 
+  // 解构操作dom元素的api
   const {
     insert: hostInsert,
     remove: hostRemove,
@@ -371,6 +378,9 @@ function baseCreateRenderer(
 
   // Note: functions inside this closure should use `const xxx = () => {}`
   // style in order to prevent being inlined by minifiers.
+  /*
+    patch函数不仅负责比较更新dom，还有挂载的能力
+  */
   const patch: PatchFn = (
     n1,
     n2,
@@ -1629,6 +1639,8 @@ function baseCreateRenderer(
       if (patchFlag & PatchFlags.KEYED_FRAGMENT) {
         // this could be either fully-keyed or mixed (some keyed some not)
         // presence of patchFlag means children are guaranteed to be arrays
+        //这可以是全键的或混合的（有些键的，有些不是）
+        // patchFlag的存在意味着子节点一定是数组
         patchKeyedChildren(
           c1 as VNode[],
           c2 as VNodeArrayChildren,
@@ -2093,6 +2105,13 @@ function baseCreateRenderer(
     }
   }
 
+  /*
+    unmount函数不能直接将innerHtML设置为空
+    原因：
+    - 容器内容可能是由多个组件渲染的，卸载发生时，需要调用这些组件的生命周期
+    - 内部不是多个组件组成的，有些元素的自定义指令也需要触发对应钩子函数
+    - 使用innerHTML清空内容不会移除DOM元素上的处理事件
+  */
   const unmount: UnmountFn = (
     vnode,
     parentComponent,

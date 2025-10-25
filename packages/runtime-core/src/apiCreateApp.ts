@@ -254,7 +254,9 @@ export function createAppAPI<HostElement>(
   render: RootRenderFunction<HostElement>,
   hydrate?: RootHydrateFunction,
 ): CreateAppFunction<HostElement> {
+  // rootComponent是组件的构造函数
   return function createApp(rootComponent, rootProps = null) {
+    console.log('🚀 ~ createApp ~ rootComponent:', rootComponent, rootProps)
     if (!isFunction(rootComponent)) {
       rootComponent = extend({}, rootComponent)
     }
@@ -355,6 +357,10 @@ export function createAppAPI<HostElement>(
         return app
       },
 
+      /*
+        挂载节点时最后调用的是这个方法
+        createApp(App).mount("#app");
+      */
       mount(
         rootContainer: HostElement,
         isHydrate?: boolean,
@@ -369,6 +375,7 @@ export function createAppAPI<HostElement>(
                 ` you need to unmount the previous app by calling \`app.unmount()\` first.`,
             )
           }
+          // 创建vnode
           const vnode = app._ceVNode || createVNode(rootComponent, rootProps)
           // store app context on the root VNode.
           // this will be set on the root instance on initial mount.
@@ -380,14 +387,18 @@ export function createAppAPI<HostElement>(
             namespace = undefined
           }
 
+          // HRM热更新，定义一个reload函数
           // HMR root reload
           if (__DEV__) {
             context.reload = () => {
               const cloned = cloneVNode(vnode)
               // avoid hydration for hmr updating
+              //避免HMR更新的水合作用
               cloned.el = null
               // casting to ElementNamespace because TS doesn't guarantee type narrowing
               // over function boundaries
+              //转换为ElementNamespace，因为TS不保证类型窄化
+              //通过函数边界
               render(cloned, rootContainer, namespace as ElementNamespace)
             }
           }
@@ -395,11 +406,13 @@ export function createAppAPI<HostElement>(
           if (isHydrate && hydrate) {
             hydrate(vnode as VNode<Node, Element>, rootContainer as any)
           } else {
+            // 传入的render
             render(vnode, rootContainer, namespace)
           }
           isMounted = true
           app._container = rootContainer
           // for devtools and telemetry
+          // 挂载到dom元素根节点上
           ;(rootContainer as any).__vue_app__ = app
 
           if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {

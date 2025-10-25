@@ -40,7 +40,7 @@ export const mathmlNS = 'http://www.w3.org/1998/Math/MathML'
 const doc = (typeof document !== 'undefined' ? document : null) as Document
 
 const templateContainer = doc && /*@__PURE__*/ doc.createElement('template')
-
+// 操作dom的api
 export const nodeOps: Omit<RendererOptions<Node, Element>, 'patchProp'> = {
   insert: (child, parent, anchor) => {
     parent.insertBefore(child, anchor || null)

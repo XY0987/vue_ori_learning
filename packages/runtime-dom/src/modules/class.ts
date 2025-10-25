@@ -16,6 +16,13 @@ export function patchClass(
       value ? [value, ...transitionClasses] : [...transitionClasses]
     ).join(' ')
   }
+  /*
+    设置class名有三种方式
+    - el.className
+    - setAttribute
+    - el.classList
+    其中setAttribute性能最优，所以使用setAttribute
+  */
   if (value == null) {
     el.removeAttribute('class')
   } else if (isSVG) {
