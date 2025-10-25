@@ -29,6 +29,7 @@ import {
 } from '@vue/runtime-core'
 import { extend } from '@vue/shared'
 
+// 过度动画组件，用于处理列表
 const positionMap = new WeakMap<VNode, DOMRect>()
 const newPositionMap = new WeakMap<VNode, DOMRect>()
 const moveCbKey = Symbol('_moveCb')

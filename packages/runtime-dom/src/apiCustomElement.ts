@@ -46,6 +46,7 @@ import { createApp, createSSRApp, render } from '.'
 // marker for attr removal
 const REMOVAL = {}
 
+// 自定义组件
 export type VueElementConstructor<P = {}> = {
   new (initialProps?: Record<string, any>): VueElement & P
 }

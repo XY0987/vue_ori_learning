@@ -15,6 +15,7 @@ const ANIMATION = 'animation'
 
 type AnimationTypes = typeof TRANSITION | typeof ANIMATION
 
+// 动画组件，用于处理单个元素
 export interface TransitionProps extends BaseTransitionProps<Element> {
   name?: string
   type?: AnimationTypes
