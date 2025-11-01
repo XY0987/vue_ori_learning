@@ -217,6 +217,7 @@ export function initProps(
 
   if (isStateful) {
     // stateful
+    // props也建立响应式依赖
     instance.props = isSSR ? props : shallowReactive(props)
   } else {
     if (!instance.type.props) {
@@ -236,6 +237,11 @@ function isInHmrContext(instance: ComponentInternalInstance | null) {
     instance = instance.parent
   }
 }
+
+/**
+ * attr：没有显示声明为props的属性会放到attr中
+ * 事件：事件也会存放到props中（书P312）
+ */
 
 export function updateProps(
   instance: ComponentInternalInstance,
@@ -267,6 +273,7 @@ export function updateProps(
       for (let i = 0; i < propsToUpdate.length; i++) {
         let key = propsToUpdate[i]
         // skip if the prop key is a declared emit event listener
+        // 如果prop键是声明的发出事件监听器，则跳过
         if (isEmitListener(instance.emitsOptions, key)) {
           continue
         }
@@ -275,6 +282,8 @@ export function updateProps(
         if (options) {
           // attr / props separation was done on init and will be consistent
           // in this code path, so just check if attrs have it.
+          // attr / props分离是在init时完成的，并且会保持一致
+          //在这个代码路径中，所以只需检查attrs是否有。
           if (hasOwn(attrs, key)) {
             if (value !== attrs[key]) {
               attrs[key] = value
@@ -292,6 +301,7 @@ export function updateProps(
             )
           }
         } else {
+          // 处理事件的key值，兼容vue2模式
           if (__COMPAT__) {
             if (isOn(key) && key.endsWith('Native')) {
               key = key.slice(0, -6) // remove Native postfix

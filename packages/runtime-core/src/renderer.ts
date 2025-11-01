@@ -1311,6 +1311,7 @@ function baseCreateRenderer(
     optimized,
   ) => {
     console.log('🚀 ~ setupRenderEffect ~ instance:', instance)
+    // 调度器，最后会放在微任务队列中执行
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
         let vnodeHook: VNodeHook | null | undefined
@@ -1591,6 +1592,7 @@ function baseCreateRenderer(
 
     // create reactive effect for rendering
     instance.scope.on()
+    // 创建响应式依赖，方便后续组件更新
     const effect = (instance.effect = new ReactiveEffect(componentUpdateFn))
     instance.scope.off()
 
