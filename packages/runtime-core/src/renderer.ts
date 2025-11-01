@@ -411,19 +411,24 @@ function baseCreateRenderer(
     const { type, ref, shapeFlag } = n2
     switch (type) {
       case Text:
+        // 文本节点
         processText(n1, n2, container, anchor)
         break
       case Comment:
+        // 注释节点
         processCommentNode(n1, n2, container, anchor)
         break
       case Static:
         if (n1 == null) {
+          // 静态节点，挂载到容器中
           mountStaticNode(n2, container, anchor, namespace)
         } else if (__DEV__) {
+          // 静态节点，更新（仅dev模式）
           patchStaticNode(n1, n2, container, namespace)
         }
         break
       case Fragment:
+        // Fragment节点，处理Fragment节点
         processFragment(
           n1,
           n2,
@@ -438,6 +443,7 @@ function baseCreateRenderer(
         break
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
+          // 处理元素节点
           processElement(
             n1,
             n2,
@@ -450,6 +456,7 @@ function baseCreateRenderer(
             optimized,
           )
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          // 处理组件
           processComponent(
             n1,
             n2,
@@ -462,6 +469,7 @@ function baseCreateRenderer(
             optimized,
           )
         } else if (shapeFlag & ShapeFlags.TELEPORT) {
+          // 自定义组件Teleport
           ;(type as typeof TeleportImpl).process(
             n1 as TeleportVNode,
             n2 as TeleportVNode,
@@ -475,6 +483,7 @@ function baseCreateRenderer(
             internals,
           )
         } else if (__FEATURE_SUSPENSE__ && shapeFlag & ShapeFlags.SUSPENSE) {
+          // 组定义组件Suspense
           ;(type as typeof SuspenseImpl).process(
             n1,
             n2,
@@ -822,6 +831,7 @@ function baseCreateRenderer(
     if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
       el.__vnode = n2
     }
+    // patchFlag标记动态节点，用于比较优化
     let { patchFlag, dynamicChildren, dirs } = n2
     // #1426 take the old vnode's patch flag into account since user may clone a
     // compiler-generated vnode, which de-opts to FULL_PROPS
@@ -974,6 +984,7 @@ function baseCreateRenderer(
           // which also requires the correct parent container
           !isSameVNodeType(oldVNode, newVNode) ||
           // - In the case of a component, it could contain anything.
+          // vnode的shapeFlag为创建vnode时赋值的，主要时标记节点类型
           oldVNode.shapeFlag &
             (ShapeFlags.COMPONENT | ShapeFlags.TELEPORT | ShapeFlags.SUSPENSE))
           ? hostParentNode(oldVNode.el)!
@@ -1097,6 +1108,8 @@ function baseCreateRenderer(
       ) {
         // a stable fragment (template root or <template v-for>) doesn't need to
         // patch children order, but it may contain dynamicChildren.
+        //一个稳定的片段（模板根或<template v-for>）不需要
+        // patch children order，但可能包含dynamicChildren。
         patchBlockChildren(
           n1.dynamicChildren,
           dynamicChildren,
@@ -1153,6 +1166,7 @@ function baseCreateRenderer(
     n2.slotScopeIds = slotScopeIds
     if (n1 == null) {
       if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+        // keep-alive组件处理
         ;(parentComponent!.ctx as KeepAliveContext).activate(
           n2,
           container,
@@ -1307,6 +1321,7 @@ function baseCreateRenderer(
         toggleRecurse(instance, false)
         // beforeMount hook
         if (bm) {
+          // 调用beforeMount钩子函数
           invokeArrayFns(bm)
         }
         // onVnodeBeforeMount
@@ -1397,6 +1412,7 @@ function baseCreateRenderer(
         }
         // mounted hook
         if (m) {
+          // 调用mounted钩子函数
           queuePostRenderEffect(m, parentSuspense)
         }
         // onVnodeMounted
@@ -1492,6 +1508,7 @@ function baseCreateRenderer(
 
         // beforeUpdate hook
         if (bu) {
+          // 调用beforeUpdate钩子函数
           invokeArrayFns(bu)
         }
         // onVnodeBeforeUpdate
@@ -1604,6 +1621,7 @@ function baseCreateRenderer(
     nextVNode: VNode,
     optimized: boolean,
   ) => {
+    // 更新props和slots，更新这两个值，其他的更新会因为props和slots的变化而触发
     nextVNode.component = instance
     const prevProps = instance.vnode.props
     instance.vnode = nextVNode
