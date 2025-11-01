@@ -136,6 +136,7 @@ export const TeleportImpl = {
       }
 
       const mountToTarget = () => {
+        // 获取到目标渲染节点（props.to属性）
         const target = (n2.target = resolveTarget(n2.props, querySelector))
         const targetAnchor = prepareAnchor(target, n2, createText, insert)
         if (target) {
@@ -159,11 +160,13 @@ export const TeleportImpl = {
       }
 
       if (disabled) {
+        // 禁用时直接渲染到原位置
         mount(container, mainAnchor)
         updateCssVars(n2, true)
       }
 
       if (isTeleportDeferred(n2.props)) {
+        // 延迟渲染时，先将元素挂载到一个临时位置，然后再渲染到目标位置
         n2.el!.__isMounted = false
         queuePostRenderEffect(() => {
           mountToTarget()

@@ -118,6 +118,7 @@ const KeepAliveImpl: ComponentOptions = {
 
     const parentSuspense = instance.suspense
 
+    // 取出渲染器的patch、move、unmount等方法
     const {
       renderer: {
         p: patch,
@@ -126,6 +127,7 @@ const KeepAliveImpl: ComponentOptions = {
         o: { createElement },
       },
     } = sharedContext
+    // 创建隐藏容器
     const storageContainer = createElement('div')
 
     sharedContext.activate = (
