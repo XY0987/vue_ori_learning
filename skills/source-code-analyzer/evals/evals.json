@@ -1,0 +1,47 @@
+{
+  "skill_name": "source-code-analyzer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我刚 clone 了 Vue3 的源码，完全没看过，帮我快速了解一下这个项目的整体架构和核心模块",
+      "expected_output": "输出一份全景报告，包含项目概述、技术栈、核心模块地图（含优先级和复杂度）、模块依赖关系图、推荐学习路径",
+      "files": [],
+      "expectations": [
+        "报告包含项目概述部分",
+        "识别出 monorepo 架构",
+        "列出了核心模块及其职责（至少包含 reactivity/runtime-core/compiler-core）",
+        "包含模块依赖关系图（Mermaid 或文字形式）",
+        "给出了推荐学习路径",
+        "标注了模块的优先级（必读/选读）和复杂度"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Vue3 的响应式系统是怎么实现的？帮我深入分析一下 reactivity 包的核心原理",
+      "expected_output": "对 reactivity 包做专题分析，涵盖 Proxy 机制、track/trigger 依赖收集与触发、effect 副作用系统，附带代码引用和流程图",
+      "files": [],
+      "expectations": [
+        "解释了 Proxy 的基本机制",
+        "分析了 track() 函数的依赖收集原理",
+        "分析了 trigger() 函数的更新触发原理",
+        "包含源码文件的代码引用（使用 startLine:endLine:filepath 格式）",
+        "包含流程图或步骤分解",
+        "提到了 ref/reactive/computed 等核心 API 的关系"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "我想系统学习这个 Vue3 源码仓库，帮我生成一个学习路线，我有 Vue 使用经验但没看过源码",
+      "expected_output": "生成个性化学习路线，分阶段规划，每阶段有明确目标、学习内容、实践任务和调试建议",
+      "files": [],
+      "expectations": [
+        "评估了用户水平（有使用经验但没看过源码）",
+        "学习路线分为至少3个阶段",
+        "每个阶段有明确的学习目标",
+        "包含具体的文件阅读建议（带路径）",
+        "包含调试技巧（断点、构建命令等）",
+        "包含实践任务（如手写简化版）"
+      ]
+    }
+  ]
+}
